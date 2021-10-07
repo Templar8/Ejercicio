@@ -19,8 +19,9 @@ namespace Scheduler.Windows
 
         private void SchedulerForm_Load(object sender, EventArgs e)
         {
-            this.CbxOccurs.SelectedItem = Frecuency.Daily.ToString();
+            this.CbxOccurs.SelectedItem = SchedulerFrecuency.Daily.ToString();
             this.CbxType.SelectedItem = RecurringType.Once.ToString();
+            this.DtpEndDate.Text = string.Empty;
         }
 
         private void CbxType_SelectedIndexChanged(object sender, EventArgs e)
@@ -34,12 +35,13 @@ namespace Scheduler.Windows
         }
 
         private void BttCalculateNextDate_Click(object sender, EventArgs e)
-        {
-            CalculatedDate Calculator = new CalculatedDate(this.DtpCurrentDate.Value, (this.DtpConfigurationDate.Value.Date.Add(this.DtpConfigurationTime.Value.TimeOfDay)),
+        {            
+            DateCalculator Calculator = new DateCalculator();
+            DateResult Result = Calculator.GetNextExecutionDate(this.DtpCurrentDate.Value, (this.DtpConfigurationDate.Value.Date.Add(this.DtpConfigurationTime.Value.TimeOfDay)),
                 (RecurringType)Enum.Parse(typeof(RecurringType), this.CbxType.SelectedItem.ToString()),
-                (Frecuency)Enum.Parse(typeof(Frecuency), this.CbxOccurs.SelectedItem.ToString()), Convert.ToInt32(this.NUDRecurrency.Value), this.DtpStartDate.Value, this.DtpEndDate.Value);
-            this.TxtNextExecution.Text = Calculator.GetNextExecutionDate().ToString();
-            this.TxtDescription.Text = Calculator.GetDescription().ToString();
+                (SchedulerFrecuency)Enum.Parse(typeof(SchedulerFrecuency), this.CbxOccurs.SelectedItem.ToString()), Convert.ToInt32(this.NUDRecurrency.Value), this.DtpStartDate.Value, this.DtpEndDate.Value);            
+            this.TxtNextExecution.Text = Result.NextDate.ToString();
+            this.TxtDescription.Text = Result.Description;
         }
     }
 }
