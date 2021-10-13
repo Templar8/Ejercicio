@@ -37,9 +37,10 @@ namespace Scheduler.Windows
         private void BttCalculateNextDate_Click(object sender, EventArgs e)
         {            
             DateCalculator Calculator = new DateCalculator();
-            DateResult Result = Calculator.GetNextExecutionDate(this.DtpCurrentDate.Value, (this.DtpConfigurationDate.Value.Date.Add(this.DtpConfigurationTime.Value.TimeOfDay)),
-                (RecurringType)Enum.Parse(typeof(RecurringType), this.CbxType.SelectedItem.ToString()),
-                (SchedulerFrecuency)Enum.Parse(typeof(SchedulerFrecuency), this.CbxOccurs.SelectedItem.ToString()), Convert.ToInt32(this.NUDRecurrency.Value), this.DtpStartDate.Value, this.DtpEndDate.Value);            
+            SchedulerConfiguration Configuration = new SchedulerConfiguration(this.DtpCurrentDate.Value, this.DtpConfigurationDate.Value.Date.Add(this.DtpConfigurationTime.Value.TimeOfDay),
+                (RecurringType)Enum.Parse(typeof(RecurringType), this.CbxType.SelectedItem.ToString()),(SchedulerFrecuency)Enum.Parse(typeof(SchedulerFrecuency),
+                this.CbxOccurs.SelectedItem.ToString()), Convert.ToInt32(this.NUDRecurrency.Value), this.DtpStartDate.Value, this.DtpEndDate.Value);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             this.TxtNextExecution.Text = Result.NextDate.ToString();
             this.TxtDescription.Text = Result.Description;
         }
