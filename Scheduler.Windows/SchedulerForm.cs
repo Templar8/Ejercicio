@@ -39,7 +39,7 @@ namespace Scheduler.Windows
             DateCalculator Calculator = new DateCalculator();
             SchedulerConfiguration Configuration = new SchedulerConfiguration(this.DtpCurrentDate.Value, this.DtpConfigurationDate.Value.Date.Add(this.DtpConfigurationTime.Value.TimeOfDay),
                 (RecurringType)Enum.Parse(typeof(RecurringType), this.CbxType.SelectedItem.ToString()),(SchedulerFrecuency)Enum.Parse(typeof(SchedulerFrecuency),
-                this.CbxOccurs.SelectedItem.ToString()), Convert.ToInt32(this.NUDRecurrency.Value), this.DtpStartDate.Value, this.DtpEndDate.Value);
+                this.CbxOccurs.SelectedItem.ToString()), Convert.ToInt32(this.NUDRecurrency.Value), null, null, this.DtpStartDate.Value, this.DtpEndDate.Value);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             this.TxtNextExecution.Text = Result.NextDate.ToString();
             this.TxtDescription.Text = Result.Description;
