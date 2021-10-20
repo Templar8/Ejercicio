@@ -368,7 +368,7 @@ namespace Tests
             Result.Description.Should().Be($"Occurs every 5 weeks on Monday and Friday every 1 Seconds between 06:30:00 and 10:30:00 starting on {DateTime.Today}");
         }
         [TestMethod]
-        public void Recurring_Type_Recurring_With_Daily_Configuration_Occurs_Recurring_Without_Frecuencys_Should_Throw_Exception()
+        public void Recurring_Type_Recurring_With_Daily_Configuration_Recurring_Without_Frecuencys_Should_Throw_Exception()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
