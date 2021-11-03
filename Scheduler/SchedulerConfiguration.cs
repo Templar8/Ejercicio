@@ -12,9 +12,10 @@ namespace Scheduler
         private DateTime? configurationDate;
         private RecurringType type;
         private SchedulerFrecuency schedulerFrecuency;
-        private int? frecuency;        
+        private int? frecuency;
         DateTime startDate;
         DateTime? endDate;
+        MonthlyConfiguration monthlyConfiguration;
         WeekConfiguration weekConfiguration;
         DailyConfiguration dailyConfiguration;
 
@@ -22,14 +23,15 @@ namespace Scheduler
         { }
 
         public SchedulerConfiguration(DateTime CurrentDate, DateTime? ConfigurationDate, RecurringType Type, SchedulerFrecuency SchedulerFrecuency,
-            int? Frecuency, DayOfWeek[] DaysOfWeek, DailyConfiguration DailyConfiguration,  DateTime StartDate, DateTime? EndDate)
+            int? Frecuency, DayOfWeek[] DaysOfWeek, DailyConfiguration DailyConfiguration, MonthlyConfiguration MonthlyConfiguration, DateTime StartDate, DateTime? EndDate)
         {
             this.currentDate = CurrentDate;
             this.configurationDate = ConfigurationDate;
             this.type = Type;
             this.schedulerFrecuency = SchedulerFrecuency;
             this.frecuency = Frecuency;
-            this.weekConfiguration = new WeekConfiguration(DaysOfWeek,Frecuency);
+            this.weekConfiguration = new WeekConfiguration(DaysOfWeek, Frecuency);
+            this.monthlyConfiguration = MonthlyConfiguration;
             this.dailyConfiguration = DailyConfiguration;
             this.startDate = StartDate;
             this.endDate = EndDate;
@@ -58,7 +60,7 @@ namespace Scheduler
                 return this.type;
             }
         }
-         
+
         public SchedulerFrecuency SchedulerFrecuency
         {
             get
@@ -89,7 +91,15 @@ namespace Scheduler
             {
                 return this.endDate;
             }
-        }        
+        }
+
+        public MonthlyConfiguration MonthlyConfiguration
+        {
+            get
+            {
+                return this.monthlyConfiguration;
+            }
+        }            
 
         public WeekConfiguration WeekConfiguration
         {
@@ -106,6 +116,15 @@ namespace Scheduler
                 return this.dailyConfiguration;
             }
         }
+    }
+
+    public class MonthlyConfiguration
+    {
+        public bool DayFrecuency { get; set; }
+        public int? DayOfMonth { get; set; }
+        public int MonthFrecuency { get; set; }
+        public MonthlyDayFrecuency MonthlyDayFrecuency { get; set; }
+        public MonthlyWeekDayFrecuency MonthlyWeekDayFrecuency { get; set; }
     }
 
     public class WeekConfiguration
@@ -138,84 +157,16 @@ namespace Scheduler
 
     public class DailyConfiguration
     {
-        bool occursOnceDaily;
-        TimeSpan? dailyHour;
-        int? dailyFrecuency;
-        TimeFrecuency timeFrecuency;
-        TimeSpan? dailyStartHour;
-        TimeSpan? dailyEndHour;
+        public bool OccursOnceDaily { get; set; }
 
-        public bool OccursOnceDaily
-        {
-            get
-            {
-                return this.occursOnceDaily;
-            }
-            set
-            {
-                this.occursOnceDaily = value;
-            }
-        }
+        public TimeSpan? DailyHour { get; set; }        
 
-        public TimeSpan? DailyHour
-        {
-            get
-            {
-                return this.dailyHour;
-            }
-            set
-            {
-                this.dailyHour = value.Value;
-            }
-        }
+        public int? DailyFrecuency { get; set; }        
 
-        public int? DailyFrecuency
-        {
-            get
-            {
-                return this.dailyFrecuency;
-            }
-            set
-            {
-                this.dailyFrecuency = value;
-            }
-        }
+        public TimeFrecuency TimeFrecuency { get; set; }        
 
-        public TimeFrecuency TimeFrecuency
-        {
-            get
-            {
-                return this.timeFrecuency;
-            }
-            set
-            {
-                this.timeFrecuency = value;
-            }
-        }
+        public TimeSpan? DailyStartHour { get; set; }        
 
-        public TimeSpan? DailyStartHour
-        {
-            get
-            {
-                return this.dailyStartHour;
-            }
-            set
-            {
-                this.dailyStartHour = value.Value;
-            }
-        }
-
-        public TimeSpan? DailyEndHour
-        {
-            get
-            {
-                return this.dailyEndHour;
-            }
-            set
-            {
-                this.dailyEndHour = value.Value;
-            }
-        }
-
+        public TimeSpan? DailyEndHour { get; set; }
     }
 }
