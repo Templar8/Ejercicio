@@ -50,8 +50,7 @@ namespace Scheduler
                     break;
                 case SchedulerFrecuency.Monthly:
                     this.MonthlyFrecuencyValidations(Configuration);
-                    ResultDate = this.GetMonthlyConfiguration(Configuration.CurrentDate, Configuration.MonthlyConfiguration, Configuration.DailyConfiguration);
-                    //ResultDate = this.GetDailyConfiguration(Configuration.CurrentDate.AddMonths(Configuration.Frecuency.Value), Configuration.DailyConfiguration);
+                    ResultDate = this.GetMonthlyConfiguration(Configuration.CurrentDate, Configuration.MonthlyConfiguration, Configuration.DailyConfiguration);                    
                     break;
                 case SchedulerFrecuency.Yearly:
                     ResultDate = this.GetDailyConfiguration(Configuration.CurrentDate.AddYears(Configuration.Frecuency.Value), Configuration.DailyConfiguration);
@@ -202,11 +201,12 @@ namespace Scheduler
 
         private DateTime GetMonthDay(DateTime Result, MonthlyDayFrecuency DayFrecuency, MonthlyWeekDayFrecuency WeekDayFrecuency)
         {
-            int cont = 1;
+            bool LastOcurrence = DayFrecuency == MonthlyDayFrecuency.Last;
+            int cont = LastOcurrence ? 5 : 1;
             List<DayOfWeek> Days = new List<DayOfWeek>();
             int ocurrence = this.GetDayPosition(DayFrecuency);
             Days.AddRange(this.GetWeekDays(WeekDayFrecuency));
-            DateTime DayOfMonth = new DateTime(Result.Year, Result.Month, 1);
+            DateTime DayOfMonth = LastOcurrence ? new DateTime(Result.Year, Result.Month, DateTime.DaysInMonth(Result.Year, Result.Month)) : new DateTime(Result.Year, Result.Month, 1);
             DateTime ResultDay = new DateTime();
             do
             {
@@ -219,7 +219,7 @@ namespace Scheduler
                     }
                     cont++;
                 }
-                DayOfMonth = DayOfMonth.AddDays(1);
+                DayOfMonth = LastOcurrence ? DayOfMonth.AddDays(-1) : DayOfMonth.AddDays(1);
             } while (DayOfMonth.Month == Result.Month);
             return ResultDay;
         }
@@ -289,17 +289,17 @@ namespace Scheduler
 
         private void CommonValidations(SchedulerConfiguration Configuration)
         {
-            if (Configuration.CurrentDate < DateTime.MinValue || Configuration.CurrentDate > DateTime.MaxValue)
+            if (Configuration.CurrentDate == DateTime.MinValue || Configuration.CurrentDate == DateTime.MaxValue)
             {
-                throw new SchedulerException("The current date exceeds the supported date min and max values");
+                throw new SchedulerException("The current date can't be date min or max values");
             }
-            if (Configuration.StartDate < DateTime.MinValue || Configuration.StartDate > DateTime.MaxValue)
+            if (Configuration.StartDate == DateTime.MinValue || Configuration.StartDate == DateTime.MaxValue)
             {
-                throw new SchedulerException("The start date exceeds the supported date min and max values");
+                throw new SchedulerException("The start date can't be date min or max values");
             }
-            if (Configuration.EndDate < DateTime.MinValue || Configuration.EndDate > DateTime.MaxValue)
+            if (Configuration.EndDate == DateTime.MinValue || Configuration.EndDate == DateTime.MaxValue)
             {
-                throw new SchedulerException("The end date exceeds the supported date min and max values");
+                throw new SchedulerException("The end date can't be date min or max values");
             }
             if (Configuration.StartDate > Configuration.EndDate)
             {
@@ -320,9 +320,9 @@ namespace Scheduler
             {
                 throw new SchedulerException("If 'Once' type is selected you must indicate a Configuration DateTime in order to start the process");
             }
-            if (Configuration.ConfigurationDate.HasValue && (Configuration.ConfigurationDate < DateTime.MinValue || Configuration.ConfigurationDate > DateTime.MaxValue))
+            if (Configuration.ConfigurationDate.HasValue && (Configuration.ConfigurationDate == DateTime.MinValue || Configuration.ConfigurationDate == DateTime.MaxValue))
             {
-                throw new SchedulerException("The configuration date exceeds the supported date min and max values");
+                throw new SchedulerException("The configuration date can't be date min or max values");
             }
         }
 
@@ -354,13 +354,13 @@ namespace Scheduler
             {
                 throw new SchedulerException("If Monthly frecuency is selected you must set a monthly configuration");
             }
-            if (Configuration.MonthlyConfiguration.MonthFrecuency <= 0)
-            {
-                throw new SchedulerException("You must set a positive month frecuency");
-            }
             if (Configuration.MonthlyConfiguration.DayFrecuency && (Configuration.MonthlyConfiguration.DayOfMonth.HasValue == false || Configuration.MonthlyConfiguration.DayOfMonth <= 0))
             {
                 throw new SchedulerException("You must indicate a day if monthly day frecuency is selected");
+            }
+            if (Configuration.MonthlyConfiguration.MonthFrecuency <= 0)
+            {
+                throw new SchedulerException("You must set a positive month frecuency");
             }
         }
     }

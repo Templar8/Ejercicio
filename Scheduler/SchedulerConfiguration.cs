@@ -19,9 +19,6 @@ namespace Scheduler
         WeekConfiguration weekConfiguration;
         DailyConfiguration dailyConfiguration;
 
-        public SchedulerConfiguration()
-        { }
-
         public SchedulerConfiguration(DateTime CurrentDate, DateTime? ConfigurationDate, RecurringType Type, SchedulerFrecuency SchedulerFrecuency,
             int? Frecuency, DayOfWeek[] DaysOfWeek, DailyConfiguration DailyConfiguration, MonthlyConfiguration MonthlyConfiguration, DateTime StartDate, DateTime? EndDate)
         {

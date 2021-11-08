@@ -29,6 +29,21 @@ namespace Tests
         }
         [TestMethod]
         [ExpectedException(typeof(SchedulerException),
+           "The configuration date can't be date min or max values")]
+        public void Recurring_Type_Once_Configuration_Date_Max_Value_Should_Throw_Exception()
+        {
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (DateTime.Today, DateTime.MaxValue, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.Today, null);
+            Calculator.GetNextExecutionDate(Configuration);
+        }
+        [TestMethod]
+        [ExpectedException(typeof(SchedulerException),
             "Start date cannot be greater than end date")]
         public void Start_Date_Greater_Than_End_Date_Should_Throw_Exception()
         {
@@ -40,6 +55,51 @@ namespace Tests
             };
             SchedulerConfiguration Configuration = new SchedulerConfiguration
                 (DateTime.Today, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.Today, DateTime.Today.AddDays(-5));
+            Calculator.GetNextExecutionDate(Configuration);
+        }
+        [TestMethod]
+        [ExpectedException(typeof(SchedulerException),
+            "The start date can't be date min or max values")]
+        public void Current_Date_Max_Value_Should_Throw_Exception()
+        {
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (DateTime.MaxValue, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.Today, DateTime.Today.AddDays(-5));
+            Calculator.GetNextExecutionDate(Configuration);
+        }
+        [TestMethod]
+        [ExpectedException(typeof(SchedulerException),
+            "The start date can't be date min or max values")]
+        public void Start_Date_Max_Value_Should_Throw_Exception()
+        {
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (DateTime.Today, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.MaxValue, DateTime.Today.AddDays(-5));
+            Calculator.GetNextExecutionDate(Configuration);
+        }
+        [TestMethod]
+        [ExpectedException(typeof(SchedulerException),
+           "The end date can't be date min or max values")]
+        public void End_Date_Min_Value_Should_Throw_Exception()
+        {
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (DateTime.Today, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.Today, DateTime.MaxValue);
             Calculator.GetNextExecutionDate(Configuration);
         }
         [TestMethod]
@@ -506,6 +566,228 @@ namespace Tests
             Result.Description.Should().NotBeNullOrEmpty();
             Result.Description.Should().Be($"Occurs the Third Weekendday of every 2 months at 15:30:00");
         }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_Fourth_Friday_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
+        {
+            DateTime TestDate = new DateTime(2021, 10, 18);
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
+            {
+                DayFrecuency = false,
+                MonthlyDayFrecuency = MonthlyDayFrecuency.Fourth,
+                MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Friday,
+                MonthFrecuency = 2
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            DateTime ExpectedDateTime = new DateTime(2021, 12, 24, 15, 30, 0);
+            Result.NextDate.Should().Be(ExpectedDateTime);
+            Result.Description.Should().NotBeNullOrEmpty();
+            Result.Description.Should().Be($"Occurs the Fourth Friday of every 2 months at 15:30:00");
+        }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_Last_Monday_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
+        {
+            DateTime TestDate = new DateTime(2021, 10, 18);
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
+            {
+                DayFrecuency = false,
+                MonthlyDayFrecuency = MonthlyDayFrecuency.Last,
+                MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Monday,
+                MonthFrecuency = 2
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            DateTime ExpectedDateTime = new DateTime(2021, 12, 27, 15, 30, 0);
+            Result.NextDate.Should().Be(ExpectedDateTime);
+            Result.Description.Should().NotBeNullOrEmpty();
+            Result.Description.Should().Be($"Occurs the Last Monday of every 2 months at 15:30:00");
+        }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_First_Wednesday_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
+        {
+            DateTime TestDate = new DateTime(2021, 10, 18);
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
+            {
+                DayFrecuency = false,
+                MonthlyDayFrecuency = MonthlyDayFrecuency.First,
+                MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Wednesday,
+                MonthFrecuency = 2
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            DateTime ExpectedDateTime = new DateTime(2021, 12, 1, 15, 30, 0);
+            Result.NextDate.Should().Be(ExpectedDateTime);
+            Result.Description.Should().NotBeNullOrEmpty();
+            Result.Description.Should().Be($"Occurs the First Wednesday of every 2 months at 15:30:00");
+        }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_Second_Thursday_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
+        {
+            DateTime TestDate = new DateTime(2021, 10, 18);
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
+            {
+                DayFrecuency = false,
+                MonthlyDayFrecuency = MonthlyDayFrecuency.Second,
+                MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Thursday,
+                MonthFrecuency = 2
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            DateTime ExpectedDateTime = new DateTime(2021, 12, 9, 15, 30, 0);
+            Result.NextDate.Should().Be(ExpectedDateTime);
+            Result.Description.Should().NotBeNullOrEmpty();
+            Result.Description.Should().Be($"Occurs the Second Thursday of every 2 months at 15:30:00");
+        }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_Third_Sunday_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
+        {
+            DateTime TestDate = new DateTime(2021, 10, 18);
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
+            {
+                DayFrecuency = false,
+                MonthlyDayFrecuency = MonthlyDayFrecuency.Third,
+                MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Sunday,
+                MonthFrecuency = 2
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            DateTime ExpectedDateTime = new DateTime(2021, 12, 19, 15, 30, 0);
+            Result.NextDate.Should().Be(ExpectedDateTime);
+            Result.Description.Should().NotBeNullOrEmpty();
+            Result.Description.Should().Be($"Occurs the Third Sunday of every 2 months at 15:30:00");
+        }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_Last_Day_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
+        {
+            DateTime TestDate = new DateTime(2021, 10, 18);
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
+            {
+                DayFrecuency = false,
+                MonthlyDayFrecuency = MonthlyDayFrecuency.Last,
+                MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Day,
+                MonthFrecuency = 2
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            DateTime ExpectedDateTime = new DateTime(2021, 12, 31, 15, 30, 0);
+            Result.NextDate.Should().Be(ExpectedDateTime);
+            Result.Description.Should().NotBeNullOrEmpty();
+            Result.Description.Should().Be($"Occurs the Last Day of every 2 months at 15:30:00");
+        }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_1st_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
+        {
+            DateTime TestDate = new DateTime(2021, 9, 18);
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
+            {
+                DayFrecuency = true,
+                DayOfMonth = 1,
+                MonthFrecuency = 2
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            DateTime ExpectedDateTime = new DateTime(2021, 11, 1, 15, 30, 0);
+            Result.NextDate.Should().Be(ExpectedDateTime);
+            Result.Description.Should().NotBeNullOrEmpty();
+            Result.Description.Should().Be($"Occurs the 1st of every 2 months at 15:30:00");
+        }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_2nd_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
+        {
+            DateTime TestDate = new DateTime(2021, 9, 18);
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
+            {
+                DayFrecuency = true,
+                DayOfMonth = 2,
+                MonthFrecuency = 2
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            DateTime ExpectedDateTime = new DateTime(2021, 11, 2, 15, 30, 0);
+            Result.NextDate.Should().Be(ExpectedDateTime);
+            Result.Description.Should().NotBeNullOrEmpty();
+            Result.Description.Should().Be($"Occurs the 2nd of every 2 months at 15:30:00");
+        }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_3rd_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
+        {
+            DateTime TestDate = new DateTime(2021, 9, 18);
+            DateCalculator Calculator = new DateCalculator();
+            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            {
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
+            {
+                DayFrecuency = true,
+                DayOfMonth = 3,
+                MonthFrecuency = 2
+            };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration
+                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
+            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            DateTime ExpectedDateTime = new DateTime(2021, 11, 3, 15, 30, 0);
+            Result.NextDate.Should().Be(ExpectedDateTime);
+            Result.Description.Should().NotBeNullOrEmpty();
+            Result.Description.Should().Be($"Occurs the 3rd of every 2 months at 15:30:00");
+        }        
         [TestMethod]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_31th_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
         {
