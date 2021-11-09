@@ -133,6 +133,22 @@ namespace Tests
             {
                 CurrentDate = DateTime.Today,
                 Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,                
+                StartDate = DateTime.Today,
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0)
+            };
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("If 'Recurring' type is selected you must indicate a frecuency");
+        }
+        [TestMethod]
+        public void Recurring_Type_Recurring_With_Null_Frecuency_Should_Throw_Exception()
+        {
+            DateCalculator Calculator = new DateCalculator();
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
+            {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Recurring,
                 SchedulerFrecuency = SchedulerFrecuency.Daily,
                 Frecuency = -5,
                 StartDate = DateTime.Today,
