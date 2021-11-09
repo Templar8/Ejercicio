@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31702.278
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scheduler.Windows", "Scheduler.Windows\Scheduler.Windows.csproj", "{C737C751-DBD1-4309-9761-8732246B134F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scheduler", "Scheduler\Scheduler.csproj", "{87711CA7-2642-4F60-A4D9-57D33E37A49A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{3761BBE4-8546-4F38-846C-F6DC0CCE7CDB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{3761BBE4-8546-4F38-846C-F6DC0CCE7CDB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +13,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C737C751-DBD1-4309-9761-8732246B134F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C737C751-DBD1-4309-9761-8732246B134F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C737C751-DBD1-4309-9761-8732246B134F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C737C751-DBD1-4309-9761-8732246B134F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{87711CA7-2642-4F60-A4D9-57D33E37A49A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{87711CA7-2642-4F60-A4D9-57D33E37A49A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87711CA7-2642-4F60-A4D9-57D33E37A49A}.Release|Any CPU.ActiveCfg = Release|Any CPU

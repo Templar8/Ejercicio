@@ -6,6 +6,7 @@ using FluentAssertions;
 using Scheduler.Exceptions;
 using System.Text;
 using System.Collections.Generic;
+using UT = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests
 {
@@ -13,168 +14,186 @@ namespace Tests
     public class DateCalculatorTests
     {
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-            "If 'Once' type is selected you must indicate a Configuration DateTime in order to start the process")]
         public void Recurring_Type_Once_Without_Configuration_Date_Should_Throw_Exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Once,
+                StartDate = DateTime.Today,
+                EndDate = DateTime.Today.AddDays(5),
                 OccursOnceDaily = true,
                 DailyHour = new TimeSpan(15, 30, 0)
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.Today, null);
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("If 'Once' type is selected you must indicate a Configuration DateTime in order to start the process");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-           "The configuration date can't be date min or max values")]
         public void Recurring_Type_Once_Configuration_Date_Max_Value_Should_Throw_Exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = DateTime.Today,
+                ConfigurationDate = DateTime.MaxValue,
+                StartDate = DateTime.Today,
                 OccursOnceDaily = true,
                 DailyHour = new TimeSpan(15, 30, 0)
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, DateTime.MaxValue, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.Today, null);
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("The configuration date can't be date min or max values");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-            "Start date cannot be greater than end date")]
         public void Start_Date_Greater_Than_End_Date_Should_Throw_Exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Once,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
+                StartDate = DateTime.Today,
+                EndDate = DateTime.Today.AddDays(-5),
                 OccursOnceDaily = true,
                 DailyHour = new TimeSpan(15, 30, 0)
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.Today, DateTime.Today.AddDays(-5));
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("Start date cannot be greater than end date");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-            "The start date can't be date min or max values")]
         public void Current_Date_Max_Value_Should_Throw_Exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = DateTime.MaxValue,
+                Type = RecurringType.Once,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
+                StartDate = DateTime.Today,
                 OccursOnceDaily = true,
                 DailyHour = new TimeSpan(15, 30, 0)
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.MaxValue, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.Today, DateTime.Today.AddDays(-5));
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("The current date can't be date min or max values");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-            "The start date can't be date min or max values")]
         public void Start_Date_Max_Value_Should_Throw_Exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Once,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
+                StartDate = DateTime.MaxValue,
                 OccursOnceDaily = true,
                 DailyHour = new TimeSpan(15, 30, 0)
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.MaxValue, DateTime.Today.AddDays(-5));
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("The start date can't be date min or max values");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-           "The end date can't be date min or max values")]
         public void End_Date_Min_Value_Should_Throw_Exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Once,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
+                StartDate = DateTime.Today,
+                EndDate = DateTime.MaxValue,
                 OccursOnceDaily = true,
                 DailyHour = new TimeSpan(15, 30, 0)
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, DateTime.Today, DateTime.MaxValue);
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("The end date can't be date min or max values");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-            @"You must set a Daily Configuration indicating if occurs once in the day (especifying the hour when it happens)  
-             or if it occurs multiple times (indicating how many hours, minutes or seconds between executions and the start and end time)")]
         public void Null_Daily_configuration_Should_Throw_exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, null, RecurringType.Once, SchedulerFrecuency.Daily, null, null, null, null, DateTime.Today, null);
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
+            {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Once,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
+                StartDate = DateTime.Today
+            };
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be(@"You must set a Daily Configuration indicating if occurs once in the day (especifying the hour when it happens) or if it occurs multiple times (indicating how many hours, minutes or seconds between executions and the start and end time)");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-            "Frecuency can neither be negative nor exceed integer max or min values")]
         public void Recurring_Type_Recurring_With_Negative_Frecuency_Should_Throw_Exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
+                Frecuency = -5,
+                StartDate = DateTime.Today,
                 OccursOnceDaily = true,
                 DailyHour = new TimeSpan(15, 30, 0)
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, null, RecurringType.Recurring, SchedulerFrecuency.Daily, -5, null, DailyConfiguration, null, DateTime.Today, null);
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("Frecuency can neither be negative nor exceed integer max or min values");
         }
-       
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-            @"You must set a Daily Configuration indicating if occurs once in the day (especifying the hour when it happens) or if it occurs multiple times 
-             (indicating how many hours, minutes or seconds between executions and the start and end time)")]
         public void Recurring_Type_Recurring_With_Daily_Configuration_Recurring_Without_Frecuencys_Should_Throw_Exception()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
-            {
-                OccursOnceDaily = false,
-            };
+
             DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Friday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, 5, Days, DailyConfiguration, null, DateTime.Today, null);
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
+            {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
+                Frecuency = 5,
+                StartDate = DateTime.Today,
+                OccursOnceDaily = false
+            };
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("You must set a Daily Configuration indicating if occurs once in the day (especifying the hour when it happens) or if it occurs multiple times (indicating how many hours, minutes or seconds between executions and the start and end time)");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-           @"You must set a Daily Configuration indicating if occurs once in the day (especifying the hour when it happens) or if it occurs multiple times
-            (indicating how many hours, minutes or seconds between executions and the start and end time)")]
         public void Recurring_Type_Recurring_With_Daily_Configuration_Occurs_Once_Without_Hour_Should_Throw_Exception()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
-            {
-                OccursOnceDaily = true,
-            };
             DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Friday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, 5, Days, DailyConfiguration, null, DateTime.Today, null);
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
+            {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
+                Frecuency = 5,
+                StartDate = DateTime.Today,
+                OccursOnceDaily = true
+            };
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("You must set a Daily Configuration indicating if occurs once in the day (especifying the hour when it happens) or if it occurs multiple times (indicating how many hours, minutes or seconds between executions and the start and end time)");
         }
         [TestMethod]
         public void Recurring_Type_Once_With_Configuration_Date_Should_Return_Object()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                ConfigurationDate = TestDate.AddDays(5),
+                Type = RecurringType.Once,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = TestDate
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, TestDate.AddDays(5), RecurringType.Once, SchedulerFrecuency.Daily, null, null, DailyConfiguration, null, TestDate, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 10, 23, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -187,13 +206,16 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Daily,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = TestDate
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Daily, 5, null, DailyConfiguration, null, TestDate, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 10, 23, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -201,24 +223,24 @@ namespace Tests
             Result.Description.Should().Be($"Occurs {Configuration.SchedulerFrecuency.ToString()}. Schedule will be used on {ExpectedDateTime} starting on {Configuration.StartDate}"
                 + (Configuration.EndDate.HasValue ? $" and ending on {Configuration.EndDate}" : string.Empty));
         }
-        [TestMethod]        
+        [TestMethod]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_Should_Return_Object()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                MonthDayFrecuency = true,
                 DayOfMonth = 18,
-                MonthFrecuency = 5
+                MonthFrecuency = 5,
+                StartDate = TestDate
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, TestDate, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2022, 3, 18, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -230,13 +252,16 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Yearly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = TestDate
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Yearly, 5, null, DailyConfiguration, null, TestDate, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2026, 10, 18, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -245,70 +270,80 @@ namespace Tests
                + (Configuration.EndDate.HasValue ? $" and ending on {Configuration.EndDate}" : string.Empty));
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-           "If weekly frecuency is selected you must set a week frecuency and select at least one day of the week")]
         public void Recurring_Type_Recurring_Weekly_Without_Frecuency_Should_Throw_exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
-            {
-                OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
             DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, null, Days, DailyConfiguration, null, DateTime.Today, null);
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
+            {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Weekly,
+                Frecuency = 5,
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                WeekDays = Days
+            };
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("If weekly frecuency is selected you must set a week frecuency and select at least one day of the week");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-           "Frecuency can neither be negative nor exceed integer max or min values")]
         public void Recurring_Type_Recurring_Weekly_With_Negative_Frecuency_Should_Throw_exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
-            {
-                OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
             DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, -5, Days, DailyConfiguration, null, DateTime.Today, null);
-
-            Calculator.GetNextExecutionDate(Configuration);
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
+            {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Weekly,
+                Frecuency = -5,
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                WeekDays = Days,
+            };
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("Frecuency can neither be negative nor exceed integer max or min values");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-            "If weekly frecuency is selected you must set a week frecuency and select at least one day of the week")]
         public void Recurring_Type_Recurring_Weekly_With_Null_Days_Should_Throw_exception()
         {
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = DateTime.Today,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Weekly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (DateTime.Today, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, 2, null, DailyConfiguration, null, DateTime.Today, null);
-
-            Calculator.GetNextExecutionDate(Configuration);
-
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("If weekly frecuency is selected you must set a week frecuency and select at least one day of the week");
         }
         [TestMethod]
         public void Recurring_Type_Recurring_With_Weekly_Frecuency_On_Mondays_Should_Return_Object()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
-            {
-                OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
             DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, 5, Days, DailyConfiguration, null, DateTime.Today, null);
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
+            {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Weekly,
+                Frecuency = 5,
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                WeekDays = Days,
+                WeekFrecuency = 5
+            };
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
-            DateTime ExpectedDateTime = TestDate.AddDays(Configuration.WeekConfiguration.WeekFrecuency.Value * 7).AddTicks(Configuration.DailyConfiguration.DailyHour.Value.Ticks);
+            DateTime ExpectedDateTime = TestDate.AddDays(Configuration.WeekFrecuency.Value * 7).AddTicks(Configuration.DailyHour.Value.Ticks);
             Result.NextDate.Should().Be(ExpectedDateTime);
             Result.Description.Should().NotBeNullOrEmpty();
             Result.Description.Should().Be("Occurs every 5 weeks on Monday at 15:30:00");
@@ -318,17 +353,22 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
-            {
-                OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
             DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Friday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, 5, Days, DailyConfiguration, null, DateTime.Today, null);
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
+            {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Weekly,
+                Frecuency = 5,
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                WeekDays = Days,
+                WeekFrecuency = 5
+            };
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
-            DateTime ExpectedDateTime = TestDate.AddDays(Configuration.WeekConfiguration.WeekFrecuency.Value * 7 + 4).AddTicks(Configuration.DailyConfiguration.DailyHour.Value.Ticks);
-            Result.NextDate.Should().Be(TestDate.AddDays(Configuration.WeekConfiguration.WeekFrecuency.Value * 7 + 4).AddTicks(Configuration.DailyConfiguration.DailyHour.Value.Ticks));
+            DateTime ExpectedDateTime = TestDate.AddDays(Configuration.WeekFrecuency.Value * 7 + 4).AddTicks(Configuration.DailyHour.Value.Ticks);
+            Result.NextDate.Should().Be(TestDate.AddDays(Configuration.WeekFrecuency.Value * 7 + 4).AddTicks(Configuration.DailyHour.Value.Ticks));
             Result.Description.Should().NotBeNullOrEmpty();
             Result.Description.Should().Be("Occurs every 5 weeks on Friday at 15:30:00");
         }
@@ -337,17 +377,22 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
-            {
-                OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
             DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Friday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, 5, Days, DailyConfiguration, null, DateTime.Today, null);
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
+            {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Weekly,
+                Frecuency = 5,
+                OccursOnceDaily = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                WeekDays = Days,
+                WeekFrecuency = 5
+            };
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
-            DateTime ExpectedDateTime = TestDate.AddDays(Configuration.WeekConfiguration.WeekFrecuency.Value * 7).AddTicks(Configuration.DailyConfiguration.DailyHour.Value.Ticks);
-            Result.NextDate.Should().Be(TestDate.AddDays(Configuration.WeekConfiguration.WeekFrecuency.Value * 7).AddTicks(Configuration.DailyConfiguration.DailyHour.Value.Ticks));
+            DateTime ExpectedDateTime = TestDate.AddDays(Configuration.WeekFrecuency.Value * 7).AddTicks(Configuration.DailyHour.Value.Ticks);
+            Result.NextDate.Should().Be(TestDate.AddDays(Configuration.WeekFrecuency.Value * 7).AddTicks(Configuration.DailyHour.Value.Ticks));
             Result.Description.Should().NotBeNullOrEmpty();
             Result.Description.Should().Be("Occurs every 5 weeks on Monday and Friday at 15:30:00");
         }
@@ -356,17 +401,22 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Friday };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Weekly,
+                Frecuency = 5,
                 OccursOnceDaily = false,
                 DailyStartHour = new TimeSpan(6, 30, 0),
                 DailyEndHour = new TimeSpan(10, 30, 0),
                 TimeFrecuency = TimeFrecuency.Hours,
-                DailyFrecuency = 1
+                DailyFrecuency = 1,
+                StartDate = DateTime.Today,
+                WeekDays = Days,
+                WeekFrecuency = 5
             };
-            DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Friday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, 5, Days, DailyConfiguration, null, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 11, 22, 7, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -378,17 +428,22 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Friday };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Weekly,
+                Frecuency = 5,
                 OccursOnceDaily = false,
                 DailyStartHour = new TimeSpan(6, 30, 0),
                 DailyEndHour = new TimeSpan(10, 30, 0),
                 TimeFrecuency = TimeFrecuency.Minutes,
-                DailyFrecuency = 1
+                DailyFrecuency = 1,
+                StartDate = DateTime.Today,
+                WeekDays = Days,
+                WeekFrecuency = 5
             };
-            DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Friday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, 5, Days, DailyConfiguration, null, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 11, 22, 6, 31, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -400,17 +455,22 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Friday };
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Weekly,
+                Frecuency = 5,
                 OccursOnceDaily = false,
                 DailyStartHour = new TimeSpan(6, 30, 0),
                 DailyEndHour = new TimeSpan(10, 30, 0),
                 TimeFrecuency = TimeFrecuency.Seconds,
-                DailyFrecuency = 1
+                DailyFrecuency = 1,
+                StartDate = DateTime.Today,
+                WeekDays = Days,
+                WeekFrecuency = 5
             };
-            DayOfWeek[] Days = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Friday };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Weekly, 5, Days, DailyConfiguration, null, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 11, 22, 6, 30, 1);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -422,19 +482,19 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = true,
                 DayOfMonth = 10,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 10, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -446,20 +506,20 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.First,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Tuesday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 7, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -471,20 +531,20 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.Last,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Saturday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 25, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -496,20 +556,20 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.Second,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Weekday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 2, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -521,45 +581,45 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.Second,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Weekendday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 5, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
             Result.Description.Should().NotBeNullOrEmpty();
             Result.Description.Should().Be($"Occurs the Second Weekendday of every 2 months at 15:30:00");
         }
-        [TestMethod]        
+        [TestMethod]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_Third_WeekendDay_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.Third,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Weekendday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 11, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -571,20 +631,20 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.Fourth,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Friday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 24, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -596,20 +656,20 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.Last,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Monday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 27, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -621,20 +681,20 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.First,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Wednesday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 1, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -646,20 +706,20 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.Second,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Thursday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 9, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -671,20 +731,20 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.Third,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Sunday,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 19, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -696,20 +756,20 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthlyDayFrecuency = MonthlyDayFrecuency.Last,
                 MonthlyWeekDayFrecuency = MonthlyWeekDayFrecuency.Day,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 12, 31, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -721,19 +781,19 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 9, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = true,
                 DayOfMonth = 1,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 11, 1, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -745,19 +805,19 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 9, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = true,
                 DayOfMonth = 2,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 11, 2, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
@@ -769,146 +829,146 @@ namespace Tests
         {
             DateTime TestDate = new DateTime(2021, 9, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = true,
                 DayOfMonth = 3,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 11, 3, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
             Result.Description.Should().NotBeNullOrEmpty();
             Result.Description.Should().Be($"Occurs the 3rd of every 2 months at 15:30:00");
-        }        
+        }
         [TestMethod]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_On_31th_Every_2_Months_With_Daily_Frecuency_Once_Should_Return_Object()
         {
             DateTime TestDate = new DateTime(2021, 9, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = true,
                 DayOfMonth = 31,
                 MonthFrecuency = 2
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
             DateResult Result = Calculator.GetNextExecutionDate(Configuration);
             DateTime ExpectedDateTime = new DateTime(2021, 11, 30, 15, 30, 0);
             Result.NextDate.Should().Be(ExpectedDateTime);
             Result.Description.Should().NotBeNullOrEmpty();
             Result.Description.Should().Be($"Occurs the 31th of every 2 months at 15:30:00");
         }
-        [TestMethod]
+
         [ExpectedException(typeof(SchedulerException),
            @"If Monthly frecuency is selected you must set a monthly configuration")]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_And_Null_Month_Configuration_Should_Throw_Exception()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, null, DateTime.Today, null);
-            DateResult Result = Calculator.GetNextExecutionDate(Configuration);                        
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("If weekly frecuency is selected you must set a week frecuency and select at least one day of the week");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-           @"You must set a positive month frecuency")]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_Negative_Should_Throw_Exception()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = false,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = false,
                 MonthFrecuency = -7
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
-            DateResult Result = Calculator.GetNextExecutionDate(Configuration);            
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("You must set a positive month frecuency");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-           @"You must indicate a day if monthly day frecuency is selected")]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_Month_Day_Frecuency_With_Negative_Day_Should_Throw_Exception()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
-            };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = true,
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = true,
                 DayOfMonth = -7
             };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
-            DateResult Result = Calculator.GetNextExecutionDate(Configuration);            
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("You must indicate a day if monthly day frecuency is selected");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-           @"You must indicate a day if monthly day frecuency is selected")]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_Month_Day_Frecuency_With_Null_Day_Should_Throw_Exception()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = true
             };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = true
-            };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
-            DateResult Result = Calculator.GetNextExecutionDate(Configuration);            
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("You must indicate a day if monthly day frecuency is selected");
         }
         [TestMethod]
-        [ExpectedException(typeof(SchedulerException),
-           @"You must indicate a day if monthly day frecuency is selected")]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_Month_Day_Frecuency_With_Null_Day_Should_Throw_Exceptions()
         {
             DateTime TestDate = new DateTime(2021, 10, 18);
             DateCalculator Calculator = new DateCalculator();
-            DailyConfiguration DailyConfiguration = new DailyConfiguration()
+            SchedulerConfiguration Configuration = new SchedulerConfiguration()
             {
+                CurrentDate = TestDate,
+                Type = RecurringType.Recurring,
+                SchedulerFrecuency = SchedulerFrecuency.Monthly,
+                Frecuency = 5,
                 OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0)
+                DailyHour = new TimeSpan(15, 30, 0),
+                StartDate = DateTime.Today,
+                MonthDayFrecuency = true
             };
-            MonthlyConfiguration MonthlyConfiguration = new MonthlyConfiguration()
-            {
-                DayFrecuency = true
-            };
-            SchedulerConfiguration Configuration = new SchedulerConfiguration
-                (TestDate, null, RecurringType.Recurring, SchedulerFrecuency.Monthly, 5, null, DailyConfiguration, MonthlyConfiguration, DateTime.Today, null);
-            DateResult Result = Calculator.GetNextExecutionDate(Configuration);
+            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
+            Ex.Message.Should().Be("You must indicate a day if monthly day frecuency is selected");
         }
     }
 }
