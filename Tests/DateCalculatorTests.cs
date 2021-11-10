@@ -888,26 +888,6 @@ namespace Tests
             Result.Description.Should().NotBeNullOrEmpty();
             Result.Description.Should().Be($"Occurs the 31th of every 2 months at 15:30:00");
         }
-
-        [ExpectedException(typeof(SchedulerException),
-           @"If Monthly frecuency is selected you must set a monthly configuration")]
-        public void Recurring_Type_Recurring_With_Monthly_Frecuency_And_Null_Month_Configuration_Should_Throw_Exception()
-        {
-            DateTime TestDate = new DateTime(2021, 10, 18);
-            DateCalculator Calculator = new DateCalculator();
-            SchedulerConfiguration Configuration = new SchedulerConfiguration()
-            {
-                CurrentDate = TestDate,
-                Type = RecurringType.Recurring,
-                SchedulerFrecuency = SchedulerFrecuency.Monthly,
-                Frecuency = 5,
-                OccursOnceDaily = true,
-                DailyHour = new TimeSpan(15, 30, 0),
-                StartDate = DateTime.Today,
-            };
-            SchedulerException Ex = UT.Assert.ThrowsException<SchedulerException>(() => Calculator.GetNextExecutionDate(Configuration));
-            Ex.Message.Should().Be("If weekly frecuency is selected you must set a week frecuency and select at least one day of the week");
-        }
         [TestMethod]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_Negative_Should_Throw_Exception()
         {
