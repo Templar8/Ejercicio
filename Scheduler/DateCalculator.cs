@@ -9,10 +9,35 @@ namespace Scheduler
 {
     public class DateCalculator
     {
-        public DateResult GetNextExecutionDate(SchedulerConfiguration Configuration)
+        private DateTime? LastResultDate = null;
+        public DateResult[] GetNextExecutionDateRecurring(SchedulerConfiguration Configuration, int Repetitions)
+        {
+            List<DateResult> Result = new List<DateResult>();
+            int cont = 0;
+            while (cont < Repetitions)
+            {
+                Result.Add(this.GetNextExecutionDate(Configuration));
+                cont++;
+            }
+            return Result.ToArray();
+        }
+
+        public DateResult? GetNextExecutionDate(SchedulerConfiguration Configuration)
         {
             this.CommonValidations(Configuration);
-            return Configuration.Type == RecurringType.Once ? this.GetOnceResult(Configuration) : this.GetRecurringResult(Configuration);
+            return this.GetResultDate(Configuration);
+        }
+
+        public DateResult? GetResultDate(SchedulerConfiguration Configuration)
+        {
+            DateResult Result = Configuration.Type == RecurringType.Once ? this.GetOnceResult(Configuration) : this.GetRecurringResult(Configuration);
+            if (Configuration.EndDate.HasValue == false ||
+                Result.NextDate <= Configuration.EndDate.Value)
+            {
+                this.LastResultDate = Result.NextDate;
+                return Result;
+            }            
+            return null;
         }
 
         private DateResult GetOnceResult(SchedulerConfiguration Configuration)
@@ -39,21 +64,24 @@ namespace Scheduler
         private DateTime GetRecurringResultDate(SchedulerConfiguration Configuration)
         {
             DateTime ResultDate = new DateTime();
+            DateTime LastDate = this.LastResultDate.HasValue ? this.LastResultDate.Value : Configuration.CurrentDate;
             switch (Configuration.SchedulerFrecuency)
             {
                 case SchedulerFrecuency.Daily:
-                    ResultDate = this.GetDailyConfiguration(Configuration.CurrentDate.AddDays(Configuration.Frecuency.Value), Configuration);
+                    ResultDate = this.LastResultDate.HasValue ? this.GetDailyConfiguration(LastDate, Configuration) :
+                        this.GetDailyConfiguration(LastDate.AddDays(Configuration.Frecuency.Value), Configuration);
                     break;
                 case SchedulerFrecuency.Weekly:
                     this.WeeklyFrecuencyValidations(Configuration);
-                    ResultDate = this.GetWeekDate(Configuration.CurrentDate, Configuration);
+                    ResultDate = this.GetWeekDate(LastDate, Configuration);
                     break;
                 case SchedulerFrecuency.Monthly:
                     this.MonthlyFrecuencyValidations(Configuration);
-                    ResultDate = this.GetMonthlyConfiguration(Configuration.CurrentDate, Configuration);                    
+                    ResultDate = this.GetMonthlyConfiguration(LastDate, Configuration);
                     break;
                 case SchedulerFrecuency.Yearly:
-                    ResultDate = this.GetDailyConfiguration(Configuration.CurrentDate.AddYears(Configuration.Frecuency.Value), Configuration);
+                    ResultDate = this.LastResultDate.HasValue ? this.GetDailyConfiguration(LastDate, Configuration) :
+                        this.GetDailyConfiguration(LastDate.AddYears(Configuration.Frecuency.Value), Configuration);
                     break;
             }
             return ResultDate;
@@ -83,21 +111,53 @@ namespace Scheduler
         {
             if (Configuration.OccursOnceDaily)
             {
-                return Date.AddTicks(Configuration.DailyHour.Value.Ticks);
+                return Date.TimeOfDay == Configuration.DailyHour ? Date :
+                    Date.AddTicks(Configuration.DailyHour.Value.Ticks);
             }
+            if (this.LastResultDate.HasValue == false)
+            {
+                return Date.AddTicks(Configuration.DailyStartHour.Value.Ticks);
+            }
+            Date = this.IncreaseTime(Date, Configuration);
+            if (Date.TimeOfDay > Configuration.DailyEndHour)
+            {
+                return this.IncreaseBaseFrecuency(Date, Configuration);
+            }
+            return Date;
+        }
+
+        private DateTime IncreaseTime(DateTime Date, SchedulerConfiguration Configuration)
+        {
             switch (Configuration.TimeFrecuency)
             {
                 case TimeFrecuency.Hours:
-                    Date = Date.AddTicks(Configuration.DailyStartHour.Value.Ticks).AddHours(Configuration.DailyFrecuency.Value);
-                    break;
+                    return Date.AddHours(Configuration.DailyFrecuency.Value);                    
                 case TimeFrecuency.Minutes:
-                    Date = Date.AddTicks(Configuration.DailyStartHour.Value.Ticks).AddMinutes(Configuration.DailyFrecuency.Value);
-                    break;
+                    return Date.AddMinutes(Configuration.DailyFrecuency.Value);                    
                 case TimeFrecuency.Seconds:
-                    Date = Date.AddTicks(Configuration.DailyStartHour.Value.Ticks).AddSeconds(Configuration.DailyFrecuency.Value);
-                    break;
+                    return Date.AddSeconds(Configuration.DailyFrecuency.Value);
             }
             return Date;
+        }
+
+        private DateTime IncreaseBaseFrecuency(DateTime Date, SchedulerConfiguration Configuration)
+        {
+            switch (Configuration.SchedulerFrecuency)
+            {
+                case SchedulerFrecuency.Daily:
+                    Date = Date.AddDays(Configuration.Frecuency.Value);
+                    break;
+                case SchedulerFrecuency.Weekly:
+                    Date = Date.AddDays(Configuration.Frecuency.Value);
+                    break;
+                case SchedulerFrecuency.Monthly:
+                    Date = Date.AddMonths(Configuration.Frecuency.Value);
+                    break;
+                case SchedulerFrecuency.Yearly:
+                    Date = Date.AddYears(Configuration.Frecuency.Value);
+                    break;
+            }
+            return new DateTime(Date.Year, Date.Month, Date.Day, Configuration.DailyStartHour.Value.Hours, Configuration.DailyStartHour.Value.Minutes, Configuration.DailyStartHour.Value.Seconds);
         }
 
         private string GetDailyDescription(SchedulerConfiguration Configuration)
@@ -137,7 +197,15 @@ namespace Scheduler
 
         private DateTime GetWeekDate(DateTime CurrentDate, SchedulerConfiguration Configuration)
         {
-            DateTime Date = CurrentDate.AddDays(Configuration.WeekFrecuency.Value * 7);
+            DateTime Date = CurrentDate;
+            bool RebootHour = false;
+            if (Configuration.OccursOnceDaily ||
+                (Configuration.OccursOnceDaily == false && this.LastResultDate.HasValue &&
+                this.LastResultDate.Value.TimeOfDay == Configuration.DailyEndHour))
+            {
+                RebootHour = true;
+                Date = this.GetNextWeekDate(Date, Configuration);
+            }
             do
             {
                 if (Configuration.WeekDays.Contains(Date.DayOfWeek) == false)
@@ -145,8 +213,34 @@ namespace Scheduler
                     Date = Date.AddDays(1);
                 }
             } while (Configuration.WeekDays.Contains(Date.DayOfWeek) == false);
-            Date = this.GetDailyConfiguration(Date, Configuration);
-            return Date;
+            if (RebootHour && Configuration.OccursOnceDaily == false)
+            {
+                return new DateTime(Date.Year, Date.Month, Date.Day, Configuration.DailyStartHour.Value.Hours, Configuration.DailyStartHour.Value.Minutes, Configuration.DailyStartHour.Value.Seconds);
+            }
+            return this.GetDailyConfiguration(Date, Configuration);
+        }
+
+        private DateTime GetNextWeekDate(DateTime CurrentDate, SchedulerConfiguration Configuration)
+        {
+            DateTime Date = CurrentDate;
+            if (Date.DayOfWeek >= Configuration.WeekDays.Max() || Configuration.OccursOnceDaily)
+            {
+                if (Date.DayOfWeek != Configuration.CurrentDate.DayOfWeek)
+                {
+                    Date = Configuration.CurrentDate.AddDays(Configuration.WeekFrecuency.Value * 7);
+                    Configuration.CurrentDate = Date;
+                }
+                else
+                {
+                    Date = CurrentDate.AddDays(Configuration.WeekFrecuency.Value * 7);
+                }
+            }
+            else
+            {
+                Date = CurrentDate.AddDays(1);
+                Date = new DateTime(Date.Year, Date.Month, Date.Day, Configuration.DailyStartHour.Value.Hours, Configuration.DailyStartHour.Value.Minutes, Configuration.DailyStartHour.Value.Seconds);
+            }
+            return Date; 
         }
 
         private string GetMonthlyDescription(SchedulerConfiguration Configuration)
@@ -179,8 +273,26 @@ namespace Scheduler
 
         private DateTime GetMonthlyConfiguration(DateTime Date, SchedulerConfiguration Configuration)
         {
-            DateTime Result = new DateTime();
-            Result = Date.AddMonths(Configuration.MonthFrecuency);
+            DateTime Result = Date;
+            if (this.LastResultDate.HasValue == false)
+            {
+                return this.GetDailyConfiguration(Result, Configuration);
+            }
+            if (Configuration.OccursOnceDaily || this.LastResultDate.Value.TimeOfDay == Configuration.DailyEndHour)
+            {
+                return this.IncreaseMonth(Result, Configuration);
+            }
+            return this.GetDailyConfiguration(Result, Configuration);
+        }
+
+        private DateTime IncreaseMonth(DateTime Result, SchedulerConfiguration Configuration)
+        {
+            if (Configuration.OccursOnceDaily == false)
+            {
+                Result = new DateTime(Result.Year, Result.Month, Result.Day, Configuration.DailyStartHour.Value.Hours, Configuration.DailyStartHour.Value.Minutes, Configuration.DailyStartHour.Value.Seconds);
+            }
+            Result = Result.AddMonths(Configuration.MonthFrecuency);
+
             if (Configuration.MonthDayFrecuency)
             {
                 if (DateTime.DaysInMonth(Result.Year, Result.Month) < Configuration.DayOfMonth)
@@ -196,7 +308,7 @@ namespace Scheduler
             {
                 Result = this.GetMonthDay(Result, Configuration.MonthlyDayFrecuency, Configuration.MonthlyWeekDayFrecuency);
             }
-            return this.GetDailyConfiguration(Result, Configuration);
+            return Result;
         }
 
         private DateTime GetMonthDay(DateTime Result, MonthlyDayFrecuency DayFrecuency, MonthlyWeekDayFrecuency WeekDayFrecuency)
@@ -206,7 +318,8 @@ namespace Scheduler
             List<DayOfWeek> Days = new List<DayOfWeek>();
             int ocurrence = this.GetDayPosition(DayFrecuency);
             Days.AddRange(this.GetWeekDays(WeekDayFrecuency));
-            DateTime DayOfMonth = LastOcurrence ? new DateTime(Result.Year, Result.Month, DateTime.DaysInMonth(Result.Year, Result.Month)) : new DateTime(Result.Year, Result.Month, 1);
+            DateTime DayOfMonth = LastOcurrence ? new DateTime(Result.Year, Result.Month, DateTime.DaysInMonth(Result.Year, Result.Month),Result.Hour, Result.Minute, Result.Second) :
+                new DateTime(Result.Year, Result.Month, 1, Result.Hour,Result.Minute,Result.Second);
             DateTime ResultDay = new DateTime();
             do
             {
