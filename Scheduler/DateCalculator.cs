@@ -121,7 +121,7 @@ namespace Scheduler
             Date = this.IncreaseTime(Date, Configuration);
             if (Date.TimeOfDay > Configuration.DailyEndHour)
             {
-                return this.IncreaseBaseFrecuency(Date, Configuration);
+                return this.IncreaseSchedulerFrecuency(Date, Configuration);
             }
             return Date;
         }
@@ -140,19 +140,13 @@ namespace Scheduler
             return Date;
         }
 
-        private DateTime IncreaseBaseFrecuency(DateTime Date, SchedulerConfiguration Configuration)
+        private DateTime IncreaseSchedulerFrecuency(DateTime Date, SchedulerConfiguration Configuration)
         {
             switch (Configuration.SchedulerFrecuency)
             {
                 case SchedulerFrecuency.Daily:
                     Date = Date.AddDays(Configuration.Frecuency.Value);
-                    break;
-                case SchedulerFrecuency.Weekly:
-                    Date = Date.AddDays(Configuration.Frecuency.Value);
-                    break;
-                case SchedulerFrecuency.Monthly:
-                    Date = Date.AddMonths(Configuration.Frecuency.Value);
-                    break;
+                    break;                
                 case SchedulerFrecuency.Yearly:
                     Date = Date.AddYears(Configuration.Frecuency.Value);
                     break;
@@ -170,7 +164,7 @@ namespace Scheduler
             else
             {
                 Description.Append($"every {Configuration.DailyFrecuency} {Configuration.TimeFrecuency} ");
-                Description.Append($"between {Configuration.DailyStartHour} and {Configuration.DailyEndHour} starting on {Configuration.StartDate}").ToString();
+                Description.Append($"between {Configuration.DailyStartHour} and {Configuration.DailyEndHour} starting on {this.DateFormatted(Configuration.StartDate)}").ToString();
             }
             return Description.ToString();
         }
@@ -471,6 +465,16 @@ namespace Scheduler
             {
                 throw new SchedulerException("You must set a positive month frecuency");
             }
+        }
+
+        private string DateFormatted(DateTime Date)
+        {
+            string Time = Date.TimeOfDay.ToString();
+            if (Time[0] == '0' && Time[1] == '0')
+            {
+                Time = Time.Remove(0, 1);
+            }
+            return Date.ToShortDateString() + " " + Time;
         }
     }
 }

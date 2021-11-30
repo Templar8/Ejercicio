@@ -1304,6 +1304,7 @@ namespace Tests
             Result[14].Description.Should().Be("Occurs every 5 weeks on Wednesday and Saturday every 1 Seconds between 06:30:58 and 06:31:00 starting on 18/10/2021 0:00:00");
         }
         #endregion
+
         #region Monthly Configuration
         [TestMethod]
         public void Recurring_Type_Recurring_With_Monthly_Frecuency_Negative_Should_Throw_Exception()
