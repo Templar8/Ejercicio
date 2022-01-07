@@ -49,4 +49,11 @@ namespace Scheduler
         Weekday = 8,
         Weekendday = 9
     }
+
+    public enum Language
+    { 
+        EnglishUK = 0,
+        EnglishUS = 1,
+        Español = 2
+    }
 }

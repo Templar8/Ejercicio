@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Scheduler
 {
     public class SchedulerConfiguration
     {
+        private Translations.Translations translations;
         public DateTime CurrentDate { get; set; }
 
         public DateTime? ConfigurationDate { get; set; }
@@ -21,6 +18,23 @@ namespace Scheduler
         public DateTime StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
+
+        public Language Language { get; set; }
+
+        public Translations.Translations Translations
+        {
+            get
+            {
+                if (this.translations == null)
+                {
+                    this.translations = new Translations.Translations()
+                    {
+                        Language = this.Language
+                    };
+                }
+                return this.translations; 
+            }
+        }
 
         #region Daily Configuration
 

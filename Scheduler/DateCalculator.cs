@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace Scheduler
 {
@@ -22,8 +23,28 @@ namespace Scheduler
             return Result.ToArray();
         }
 
+        private void SetCulture(Language Language)
+        {
+            switch (Language)
+            {
+                case Language.EnglishUK:
+                    Thread.CurrentThread.CurrentCulture = new CultureInfo("en-GB");
+                    break;
+                case Language.EnglishUS:
+                    Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+                    break;
+                case Language.Español:
+                    Thread.CurrentThread.CurrentCulture = new CultureInfo("es-ES");
+                    break;
+                default:
+                    Thread.CurrentThread.CurrentCulture = new CultureInfo("es-ES");
+                    break;
+            }
+        }
+
         public DateResult? GetNextExecutionDate(SchedulerConfiguration Configuration)
         {
+            this.SetCulture(Configuration.Language);
             this.CommonValidations(Configuration);
             return this.GetResultDate(Configuration);
         }
@@ -91,10 +112,9 @@ namespace Scheduler
         {
             if (Once)
             {
-                return $"Occurs once. Schedule will be used on {ResultDate} starting on {Configuration.StartDate}"
-                    + (Configuration.EndDate.HasValue ? $" and ending on {Configuration.EndDate}" : string.Empty);
+                string OnceFrecuencyDescription = Configuration.Translations.GetOnceDescription();
+                return this.GetDailyDescription(Configuration, OnceFrecuencyDescription, ResultDate);
             }
-
             if (Configuration.SchedulerFrecuency == SchedulerFrecuency.Weekly)
             {
                 return this.GetWeeklyDescription(Configuration);
@@ -103,8 +123,7 @@ namespace Scheduler
             {
                 return this.GetMonthlyDescription(Configuration);
             }
-            return $"Occurs {Configuration.SchedulerFrecuency.ToString()}. Schedule will be used on {ResultDate} starting on {Configuration.StartDate}"
-                + (Configuration.EndDate.HasValue ? $" and ending on {Configuration.EndDate}" : string.Empty);
+            return this.GetDailyDescription(Configuration, this.GetFrecuencyDescription(Configuration), ResultDate);
         }
 
         private DateTime GetDailyConfiguration(DateTime Date, SchedulerConfiguration Configuration)
@@ -154,17 +173,32 @@ namespace Scheduler
             return new DateTime(Date.Year, Date.Month, Date.Day, Configuration.DailyStartHour.Value.Hours, Configuration.DailyStartHour.Value.Minutes, Configuration.DailyStartHour.Value.Seconds);
         }
 
+        private string GetFrecuencyDescription(SchedulerConfiguration Configuration)
+        {
+            return Configuration.Translations.GetFrecuencyDescription(Configuration.SchedulerFrecuency);
+        }
+
+        private string GetDailyDescription(SchedulerConfiguration Configuration, string Frecuency, DateTime ResultDate)
+        {
+            string Description = string.Format(Configuration.Translations.GetDailyDescription(),Frecuency, ResultDate.ToString(), Configuration.StartDate.ToString());
+            if (Configuration.EndDate.HasValue)
+            {
+                Description += string.Format(Configuration.Translations.GetEndDateDescription(),Configuration.EndDate.ToString());
+            }
+            return Description;
+        }
+
         private string GetDailyDescription(SchedulerConfiguration Configuration)
         {
             StringBuilder Description = new StringBuilder();
             if (Configuration.OccursOnceDaily)
             {
-                Description.Append($"at {Configuration.DailyHour}");
+                Description.Append(string.Format(Configuration.Translations.GetOccursOnceDailyDescription(),Configuration.DailyHour));
             }
             else
             {
-                Description.Append($"every {Configuration.DailyFrecuency} {Configuration.TimeFrecuency} ");
-                Description.Append($"between {Configuration.DailyStartHour} and {Configuration.DailyEndHour} starting on {this.DateFormatted(Configuration.StartDate)}").ToString();
+                Description.Append(string.Format(Configuration.Translations.GetDailyRecurringConfigurationDescription(), Configuration.DailyFrecuency,
+                    Configuration.Translations.GetTimeFrecuencyDescription(Configuration.TimeFrecuency),Configuration.DailyStartHour,Configuration.DailyEndHour, this.DateFormatted(Configuration.StartDate)));
             }
             return Description.ToString();
         }
@@ -175,16 +209,16 @@ namespace Scheduler
             StringBuilder Description = new StringBuilder();
             Array.ForEach(Configuration.WeekDays, D =>
             {
-                WeekDays.Append(D + ", ");
+                WeekDays.Append(Configuration.Translations.GetWeekDayName(D) + ", ");
             });
             WeekDays = WeekDays.Remove(WeekDays.ToString().LastIndexOf(","), 1);
             int LastComma = WeekDays.ToString().LastIndexOf(',');
             string days = WeekDays.ToString().Trim();
             if (LastComma != -1)
             {
-                days = WeekDays.ToString().Remove(LastComma, 1).Insert(LastComma, " and").Trim();
+                days = WeekDays.ToString().Remove(LastComma, 1).Insert(LastComma, string.Format(" " + Configuration.Translations.GetMultipleWeekDaysConcat())).Trim();
             }
-            Description.Append($"Occurs every {Configuration.WeekFrecuency} weeks on {days} ");
+            Description.Append(string.Format(Configuration.Translations.GetWeeklyConfigurationDescription(),Configuration.WeekFrecuency,days));
             Description.Append(this.GetDailyDescription(Configuration));
             return Description.ToString();
         }
@@ -242,26 +276,32 @@ namespace Scheduler
             StringBuilder Description = new StringBuilder();
             if (Configuration.MonthDayFrecuency)
             {
-                string ordinal;
-                switch (Configuration.DayOfMonth)
+                string ordinal = string.Empty;
+                if (Configuration.Language == Language.EnglishUK ||
+                    Configuration.Language == Language.EnglishUS)
                 {
-                    case 1:
-                        ordinal = "st";
-                        break;
-                    case 2:
-                        ordinal = "nd";
-                        break;
-                    case 3:
-                        ordinal = "rd";
-                        break;
-                    default:
-                        ordinal = "th";
-                        break;
+                    switch (Configuration.DayOfMonth)
+                    {
+                        case 1:
+                            ordinal = "st";
+                            break;
+                        case 2:
+                            ordinal = "nd";
+                            break;
+                        case 3:
+                            ordinal = "rd";
+                            break;
+                        default:
+                            ordinal = "th";
+                            break;
+                    }
                 }
-                Description.Append($"Occurs the {Configuration.DayOfMonth}{ordinal} of every {Configuration.MonthFrecuency} months");
+                Description.Append(string.Format(
+                    Configuration.Translations.GetMonthlyMonthDayConfigurationDescription(),Configuration.DayOfMonth,ordinal,Configuration.MonthFrecuency));
                 return Description.Append(" " + this.GetDailyDescription(Configuration)).ToString();
             }
-            Description.Append($"Occurs the {Configuration.MonthlyDayFrecuency} {Configuration.MonthlyWeekDayFrecuency} of every {Configuration.MonthFrecuency} months");
+            Description.Append(string.Format(Configuration.Translations.
+                GetMonthlyConfigurationDescription(),Configuration.Translations.GetMonthDayFrecuencyDescription(Configuration.MonthlyDayFrecuency),Configuration.Translations.GetMonthDayNameDescription(Configuration.MonthlyWeekDayFrecuency),Configuration.MonthFrecuency));
             return Description.Append(" " + this.GetDailyDescription(Configuration)).ToString();
         }
 
@@ -398,26 +438,25 @@ namespace Scheduler
         {
             if (Configuration.CurrentDate == DateTime.MinValue || Configuration.CurrentDate == DateTime.MaxValue)
             {
-                throw new SchedulerException("The current date can't be date min or max values");
+                throw new SchedulerException(Configuration.Translations.GetCurrentDateMaxMinValueMessage());
             }
             if (Configuration.StartDate == DateTime.MinValue || Configuration.StartDate == DateTime.MaxValue)
             {
-                throw new SchedulerException("The start date can't be date min or max values");
+                throw new SchedulerException(Configuration.Translations.GetStartDateMaxMinValueMessage());
             }
             if (Configuration.EndDate == DateTime.MinValue || Configuration.EndDate == DateTime.MaxValue)
             {
-                throw new SchedulerException("The end date can't be date min or max values");
+                throw new SchedulerException(Configuration.Translations.GetEndDateMaxMinValueMessage());
             }
             if (Configuration.StartDate > Configuration.EndDate)
             {
-                throw new SchedulerException("Start date cannot be greater than end date");
+                throw new SchedulerException(Configuration.Translations.GetStartDateGreaterThanEndDateDescription());
             }
             if ((Configuration.OccursOnceDaily && Configuration.DailyHour == null) ||
                 (Configuration.OccursOnceDaily == false &&
                 (Configuration.DailyFrecuency.HasValue == false || Configuration.DailyStartHour.HasValue == false || Configuration.DailyEndHour.HasValue == false)))
             {
-                throw new SchedulerException("You must set a Daily Configuration indicating if occurs once in the day (especifying the hour when it happens) or if it occurs multiple times " +
-                    "(indicating how many hours, minutes or seconds between executions and the start and end time)");
+                throw new SchedulerException(Configuration.Translations.GetIncorrectDailyConfigurationDescription());
             }
         }
 
@@ -425,11 +464,11 @@ namespace Scheduler
         {
             if (Configuration.ConfigurationDate.HasValue == false)
             {
-                throw new SchedulerException("If 'Once' type is selected you must indicate a Configuration DateTime in order to start the process");
+                throw new SchedulerException(Configuration.Translations.GetConfigurationDateWithoutValueDescription());
             }
             if (Configuration.ConfigurationDate.HasValue && (Configuration.ConfigurationDate == DateTime.MinValue || Configuration.ConfigurationDate == DateTime.MaxValue))
             {
-                throw new SchedulerException("The configuration date can't be date min or max values");
+                throw new SchedulerException(Configuration.Translations.GetIncorrectConfigurationDateDescription());
             }
         }
 
@@ -437,11 +476,11 @@ namespace Scheduler
         {
             if (Configuration.Frecuency.HasValue == false)
             {
-                throw new SchedulerException("If 'Recurring' type is selected you must indicate a frecuency");
+                throw new SchedulerException(Configuration.Translations.GetFrecuencyWithoutValueDescription());
             }
             if (Configuration.Frecuency.HasValue && (Configuration.Frecuency <= 0 || Configuration.Frecuency < Int32.MinValue || Configuration.Frecuency > Int32.MaxValue))
             {
-                throw new SchedulerException("Frecuency can neither be negative nor exceed integer max or min values");
+                throw new SchedulerException(Configuration.Translations.GetIncorrectFrecuencyDescription());
             }
         }
 
@@ -451,7 +490,7 @@ namespace Scheduler
                     (Configuration.WeekFrecuency.HasValue == false || Configuration.WeekDays == null
                     || Configuration.WeekDays.Length == 0 || (Configuration.WeekFrecuency.HasValue && Configuration.WeekFrecuency <= 0)))
             {
-                throw new SchedulerException("If weekly frecuency is selected you must set a week frecuency and select at least one day of the week");
+                throw new SchedulerException(Configuration.Translations.GetIncorrectWeeklyFrecuencyDescription());
             }
         }
 
@@ -459,11 +498,11 @@ namespace Scheduler
         {
             if (Configuration.MonthDayFrecuency && (Configuration.DayOfMonth.HasValue == false || Configuration.DayOfMonth <= 0))
             {
-                throw new SchedulerException("You must indicate a day if monthly day frecuency is selected");
+                throw new SchedulerException(Configuration.Translations.GetMonthDayNotSelectedDescription());
             }
             if (Configuration.MonthFrecuency <= 0)
             {
-                throw new SchedulerException("You must set a positive month frecuency");
+                throw new SchedulerException(Configuration.Translations.GetPositiveMonthFrecuencyDescription());
             }
         }
 
